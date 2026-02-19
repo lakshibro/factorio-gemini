@@ -14,7 +14,7 @@ export default antfu(
       'ts/naming-convention': 'error',
     },
     files: ['**/*.ts'],
-    ignores: ['eslint.config.ts', 'apps/factorio-yolo-v0-playground/uno.config.ts'],
+    ignores: ['eslint.config.ts'],
   },
   {
     rules: {
@@ -42,7 +42,6 @@ export default antfu(
       'packages/autorio/**/*.ts',
       'packages/tstl-plugin-reload-factorio-mod/example/*.ts',
       'packages/factorio-rcon-snippets-for-vscode/**/*.ts',
-      'apps/factorio-yolo-v0-playground/src/workers/vlm-play-worker.ts',
     ],
   },
   // #endregion
