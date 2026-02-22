@@ -2,7 +2,7 @@
   "name": "@proj-airi/autorio-workspace",
   "type": "module",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.30.1",
   "description": "An automation mod for Factorio written in TypeScript.",
   "author": "LemonNekoGH",
   "license": "MIT",
@@ -29,31 +29,16 @@
     "bootstrap": "node scripts/bootstrap.ts"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^6.1.0",
-    "@antfu/ni": "^27.0.1",
+    "@antfu/eslint-config": "^6.7.3",
+    "@antfu/ni": "^28.2.0",
     "@types/node": "24",
-    "eslint": "^9.38.0",
-    "execa": "^9.6.0",
-    "lint-staged": "^16.2.6",
+    "eslint": "^9.39.3",
+    "execa": "^9.6.1",
+    "lint-staged": "^16.2.7",
     "simple-git-hooks": "^2.13.1",
-    "taze": "^19.8.1",
-    "typed-factorio": "^3.33.0",
+    "taze": "^19.9.2",
+    "typed-factorio": "^3.35.0",
     "typescript": "~5.9.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@vscode/vsce-sign",
-      "esbuild",
-      "keytar",
-      "onnxruntime-node",
-      "protobufjs",
-      "sharp",
-      "simple-git-hooks",
-      "unrs-resolver"
-    ],
-    "ignoredBuiltDependencies": [
-      "vue-demi"
-    ]
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm typecheck"
