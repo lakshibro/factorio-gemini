@@ -84,10 +84,11 @@ When a new model is ready, move/copy these files into the model repo before publ
 ./scripts/move-model-files.sh <model-repo-path>
 ```
 
-Then publish and tag:
+Then publish:
 
 ```bash
 # model repo
+cd path/to/factorio-yolo-v0
 hf upload proj-airi/factorio-yolo-v0 . . --repo-type model --commit-message "<message>"
 git pull --ff-only
 git fetch --tags
@@ -108,10 +109,17 @@ Notes:
 
 ### Dataset update
 
-When dataset content changes, publish the dataset repo and tag it:
+When dataset content changes,:
+
+```bash
+./scripts/move-dataset-files.sh <dataset-repo-path>
+```
+
+Then update the dataset repo:
 
 ```bash
 # dataset repo
+cd path/to/factorio-yolo-dataset-v0
 hf upload proj-airi/factorio-yolo-dataset-v0 . . --repo-type dataset --commit-message "release: <version>"
 git pull --ff-only
 git fetch --tags
