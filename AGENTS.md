@@ -19,3 +19,14 @@
 - Treat label definition changes as incompatible changes.
 - When labels change, bump minor line in `v0.x.0` style and tag model/dataset together.
 - Keep and publish `classes.json` for each released revision and validate class-count consistency at inference time.
+
+### Model repo notebooks
+- Keep exactly one user-facing notebook in model repo and name it `notebook.ipynb`.
+- Keep training/EDA/debug notebooks outside model repo (training code repo or dataset repo).
+- Link external notebooks from model card `README.md`.
+- Clear notebook outputs before publishing to reduce size and noisy diffs.
+
+### References
+- https://huggingface.co/docs/hub/main/en/notebooks
+- https://huggingface.co/docs/hub/model-release-checklist
+- https://huggingface.co/docs/hub/main/model-cards

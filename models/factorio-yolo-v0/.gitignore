@@ -1,2 +1,12 @@
 # pixi environments
 .pixi
+
+# model files
+best.pt
+best.onnx
+results.png
+val_batch0_pred.jpg
+
+# dataset files
+
+dataset/
