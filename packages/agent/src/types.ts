@@ -1,5 +1,7 @@
-export interface GeminiConfig {
+export interface LLMConfig {
   apiKey: string
+  baseURL: string
+  model: string
 }
 
 export interface FactorioWsConfig {

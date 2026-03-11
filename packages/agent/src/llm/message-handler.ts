@@ -3,8 +3,8 @@ import type { DefinedTool, Message } from 'neuri/openai'
 import type { StdoutMessage } from '../parser'
 import { createLogg } from '@guiiai/logg'
 import { assistant, composeAgent, defineToolFunction, system, toolFunction, user } from 'neuri/openai'
-import { createGoogleGenerativeAI } from '@xsai/providers'
-import { geminiConfig } from '../config'
+import { createOpenAI } from '@xsai/providers'
+import { llmConfig } from '../config'
 import { parseLLMMessage } from '../parser'
 import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
@@ -23,12 +23,13 @@ export async function createMessageHandler() {
     toolFunctions.push(defineToolFunction(await toolFunction(tool.name, tool.description, tool.schema), tool.fn))
   }
 
-  const geminiProvider = createGoogleGenerativeAI({
-    apiKey: geminiConfig.apiKey,
+  const llmProvider = createOpenAI({
+    apiKey: llmConfig.apiKey,
+    baseURL: llmConfig.baseURL,
   })
 
   const agent = composeAgent({
-    provider: geminiProvider.chat('gemini-2.5-flash-lite'),
+    provider: llmProvider.chat(llmConfig.model),
     tools: toolFunctions,
   })
 
@@ -48,7 +49,7 @@ export async function createMessageHandler() {
     }
 
     const response = await agent.call(messages, {
-      model: 'gemini-2.5-flash-lite',
+      model: llmConfig.model,
       maxRoundTrip: 10,
     })
 

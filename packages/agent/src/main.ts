@@ -11,7 +11,23 @@ import { parseChatMessage, parseModErrorMessage, parseOperationCompletedMessage 
 setGlobalFormat(Format.Pretty)
 const logger = useLogg('main').useGlobalConfig()
 
+let lastLlmCallTime = 0
+const THROTTLE_MS = 2000
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 async function executeCommandFromAgent<T extends StdoutMessage>(message: T, messageHandler: MessageHandler, ws: any) {
+  const now = Date.now()
+  const timeSinceLastCall = now - lastLlmCallTime
+  if (timeSinceLastCall < THROTTLE_MS) {
+    const waitTime = THROTTLE_MS - timeSinceLastCall
+    logger.debug(`Throttling LLM request, waiting ${waitTime}ms`)
+    await sleep(waitTime)
+  }
+  lastLlmCallTime = Date.now()
+
   const llmResponse = await backOff(() => messageHandler.handleMessage(message), {
     timeMultiple: 2,
     numOfAttempts: 3,
