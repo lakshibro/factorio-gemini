@@ -3,7 +3,8 @@ import type { DefinedTool, Message } from 'neuri/openai'
 import type { StdoutMessage } from '../parser'
 import { createLogg } from '@guiiai/logg'
 import { assistant, composeAgent, defineToolFunction, system, toolFunction, user } from 'neuri/openai'
-import { openaiConfig } from '../config'
+import { createGoogleGenerativeAI } from '@xsai/providers'
+import { geminiConfig } from '../config'
 import { parseLLMMessage } from '../parser'
 import prompt from './prompt.md?raw'
 import { tools } from './tools'
@@ -18,10 +19,10 @@ export async function createMessageHandler() {
   }
 
   const agent = composeAgent({
-    provider: {
-      apiKey: openaiConfig.apiKey,
-      baseURL: openaiConfig.baseUrl,
-    },
+    provider: createGoogleGenerativeAI({
+      apiKey: geminiConfig.apiKey,
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta/',
+    }) as any,
     tools: toolFunctions,
   })
 
@@ -41,7 +42,7 @@ export async function createMessageHandler() {
     }
 
     const response = await agent.call(messages, {
-      model: 'gpt-4o',
+      model: 'gemini-2.5-flash',
       maxRoundTrip: 10,
     })
 

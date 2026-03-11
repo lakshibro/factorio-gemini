@@ -1,6 +1,5 @@
-export interface OpenAIConfig {
+export interface GeminiConfig {
   apiKey: string
-  baseUrl: string
 }
 
 export interface FactorioWsConfig {
