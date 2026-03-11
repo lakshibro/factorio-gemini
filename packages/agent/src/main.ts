@@ -27,9 +27,10 @@ async function executeCommandFromAgent<T extends StdoutMessage>(message: T, mess
   }
 
   if (llmResponse.chatMessage) {
+    const escaped = llmResponse.chatMessage.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
     ws.socket.send(JSON.stringify({
       type: 'command',
-      command: `/c game.print([[[${llmResponse.chatMessage}]]])`,
+      command: `/silent-command game.print("${escaped}")`,
     }))
   }
 
@@ -42,7 +43,7 @@ async function executeCommandFromAgent<T extends StdoutMessage>(message: T, mess
   const command = llmResponse.operationCommands.join(';')
   ws.socket.send(JSON.stringify({
     type: 'command',
-    command: `/c ${command}`,
+    command: `/silent-command ${command}`,
   }))
 }
 
