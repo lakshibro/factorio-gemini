@@ -35,7 +35,16 @@ export interface LLMMessage {
 }
 
 export function parseLLMMessage(message: string): LLMMessage {
-  return JSON.parse(message) as LLMMessage
+  // Gemini often wraps JSON responses in markdown code blocks (```json ... ```)
+  // Strip them before parsing
+  let cleaned = message.trim()
+  if (cleaned.startsWith('```')) {
+    // Remove opening fence (```json or ```)
+    cleaned = cleaned.replace(/^```(?:json|jsonc|json5)?\s*\n?/, '')
+    // Remove closing fence
+    cleaned = cleaned.replace(/\n?\s*```\s*$/, '')
+  }
+  return JSON.parse(cleaned) as LLMMessage
 }
 
 export function parseCommandMessage(log: string): CommandMessage | null {
