@@ -20,8 +20,15 @@ async function main() {
     port: wsServerConfig.port,
   })
 
-  wsServer.on('connection', (client) => {
-    webSocketLogger.withFields({ clientId: client.url }).log('Client connected')
+  wsServer.on('connection', (socket) => {
+    webSocketLogger.log('Client connected')
+    socket.on('message', (data) => {
+      const message = JSON.parse(data.toString())
+      if (message.type === 'command') {
+        webSocketLogger.withFields({ command: message.command }).log('Executing command')
+        factorioInst.stdin?.write(`${message.command}\n`)
+      }
+    })
   })
 
   wsServer.on('error', (error) => {
@@ -44,6 +51,8 @@ async function main() {
     factorioConfig.rconPassword,
     '--rcon-port',
     factorioConfig.rconPort.toString(),
+    '--server-settings',
+    '/root/factorio/data/server-settings.json',
   ]
 
   if (arch() === 'arm64') {
@@ -55,6 +64,7 @@ async function main() {
   else {
     factorioInst = execa(factorioConfig.path, args, {
       stdout: ['pipe'],
+      stdin: 'pipe',
     })
   }
 

@@ -3,16 +3,15 @@ import type { StdoutMessage } from './parser'
 import { Buffer } from 'node:buffer'
 import { Format, setGlobalFormat, useLogg } from '@guiiai/logg'
 import { backOff } from 'exponential-backoff'
-import { client, v2FactorioConsoleCommandMessagePost, v2FactorioConsoleCommandRawPost } from 'factorio-rcon-api-client'
 import { connect } from 'it-ws'
-import { initEnv, rconClientConfig, wsClientConfig } from './config'
+import { initEnv, wsClientConfig } from './config'
 import { createMessageHandler } from './llm/message-handler'
 import { parseChatMessage, parseModErrorMessage, parseOperationCompletedMessage } from './parser'
 
 setGlobalFormat(Format.Pretty)
 const logger = useLogg('main').useGlobalConfig()
 
-async function executeCommandFromAgent<T extends StdoutMessage>(message: T, messageHandler: MessageHandler) {
+async function executeCommandFromAgent<T extends StdoutMessage>(message: T, messageHandler: MessageHandler, ws: any) {
   const llmResponse = await backOff(() => messageHandler.handleMessage(message), {
     timeMultiple: 2,
     maxDelay: 10000,
@@ -27,11 +26,12 @@ async function executeCommandFromAgent<T extends StdoutMessage>(message: T, mess
     return
   }
 
-  await v2FactorioConsoleCommandMessagePost({
-    body: {
-      message: llmResponse.chatMessage,
-    },
-  })
+  if (llmResponse.chatMessage) {
+    ws.socket.send(JSON.stringify({
+      type: 'command',
+      command: `/c game.print([[[${llmResponse.chatMessage}]]])`,
+    }))
+  }
 
   if (llmResponse.operationCommands.length === 0) {
     return
@@ -40,21 +40,17 @@ async function executeCommandFromAgent<T extends StdoutMessage>(message: T, mess
   logger.withFields({ operationCommands: llmResponse.operationCommands, currentStep: llmResponse.currentStep }).debug('Executing operation commands')
 
   const command = llmResponse.operationCommands.join(';')
-  await v2FactorioConsoleCommandRawPost({
-    body: {
-      input: `/c ${command}`,
-    },
-  })
+  ws.socket.send(JSON.stringify({
+    type: 'command',
+    command: `/c ${command}`,
+  }))
 }
 
 async function main() {
   initEnv()
 
-  client.setConfig({
-    baseUrl: `http://${rconClientConfig.host}:${rconClientConfig.port}`,
-  })
-
   const ws = connect(`ws://${wsClientConfig.wsHost}:${wsClientConfig.wsPort}`)
+  await ws.connected()
 
   const gameLogger = useLogg('game').useGlobalConfig()
 
@@ -71,23 +67,23 @@ async function main() {
 
       gameLogger.withContext('chat').log(`${chatMessage.username}: ${chatMessage.message}`)
 
-      await executeCommandFromAgent(chatMessage, messageHandler)
+      await executeCommandFromAgent(chatMessage, messageHandler, ws)
       continue
     }
-
+    
     const modErrorMessage = parseModErrorMessage(line)
     if (modErrorMessage) {
       gameLogger.withContext('mod').error(`${modErrorMessage.error}`)
-
-      await executeCommandFromAgent(modErrorMessage, messageHandler)
+      
+      await executeCommandFromAgent(modErrorMessage, messageHandler, ws)
       continue
     }
-
+    
     const operationCompletedMessage = parseOperationCompletedMessage(line)
     if (operationCompletedMessage) {
       gameLogger.withContext('mod').log(`All operations completed`)
-
-      await executeCommandFromAgent(operationCompletedMessage, messageHandler)
+      
+      await executeCommandFromAgent(operationCompletedMessage, messageHandler, ws)
       continue
     }
   }
