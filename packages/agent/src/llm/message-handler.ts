@@ -28,7 +28,7 @@ export async function createMessageHandler() {
   })
 
   const agent = composeAgent({
-    provider: geminiProvider.chat('gemini-2.0-flash'),
+    provider: geminiProvider.chat('gemini-2.5-flash-lite'),
     tools: toolFunctions,
   })
 
@@ -48,7 +48,7 @@ export async function createMessageHandler() {
     }
 
     const response = await agent.call(messages, {
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash-lite',
       maxRoundTrip: 10,
     })
 
