@@ -14,10 +14,10 @@ const logger = useLogg('main').useGlobalConfig()
 async function executeCommandFromAgent<T extends StdoutMessage>(message: T, messageHandler: MessageHandler, ws: any) {
   const llmResponse = await backOff(() => messageHandler.handleMessage(message), {
     timeMultiple: 2,
-    maxDelay: 10000,
+    numOfAttempts: 3,
     retry(e, attemptNumber) {
       logger.withFields({ error: e.message, attemptNumber }).error('Failed to handle message, attempt to retry')
-      return true
+      return attemptNumber < 3
     },
   })
 
@@ -27,10 +27,9 @@ async function executeCommandFromAgent<T extends StdoutMessage>(message: T, mess
   }
 
   if (llmResponse.chatMessage) {
-    const escaped = llmResponse.chatMessage.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
     ws.socket.send(JSON.stringify({
-      type: 'command',
-      command: `/silent-command game.print("${escaped}")`,
+      type: 'chat',
+      message: `[Airi] ${llmResponse.chatMessage}`,
     }))
   }
 

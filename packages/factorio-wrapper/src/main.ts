@@ -27,6 +27,9 @@ async function main() {
       if (message.type === 'command') {
         webSocketLogger.withFields({ command: message.command }).log('Executing command')
         factorioInst.stdin?.write(`${message.command}\n`)
+      } else if (message.type === 'chat') {
+        webSocketLogger.withFields({ chatMessage: message.message }).log('Sending chat message')
+        factorioInst.stdin?.write(`${message.message}\n`)
       }
     })
   })
