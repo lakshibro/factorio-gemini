@@ -1,5 +1,7 @@
 # Build results
 *.lua
+!packages/autorio/dist/*.lua
+!packages/autorio/dist/**/*.lua
 
 .DS_Store
 
@@ -95,6 +97,7 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+!packages/autorio/dist/
 
 # Gatsby files
 .cache/
