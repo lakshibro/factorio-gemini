@@ -44,7 +44,17 @@ export function parseLLMMessage(message: string): LLMMessage {
     // Remove closing fence
     cleaned = cleaned.replace(/\n?\s*```\s*$/, '')
   }
-  return JSON.parse(cleaned) as LLMMessage
+  try {
+    return JSON.parse(cleaned) as LLMMessage
+  } catch {
+    // If the model returns plain text instead of JSON, treat it as a chat message
+    return {
+      chatMessage: cleaned,
+      operationCommands: [],
+      plan: [],
+      currentStep: 0,
+    }
+  }
 }
 
 export function parseCommandMessage(log: string): CommandMessage | null {
