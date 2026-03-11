@@ -448,11 +448,18 @@ function state_walking_to_entity(player: LuaPlayer) {
     return
   }
 
+  if (!prototypes.entity[task_manager.player_state.parameters_walk_to_entity.entity_name]) {
+    log(`[AUTORIO] [ERROR] Unknown entity name: ${task_manager.player_state.parameters_walk_to_entity.entity_name}, reverting to IDLE state`)
+    task_manager.reset_task_state()
+    task_manager.next_task()
+    return
+  }
+
   // find nearest entity and calculate path
   const entities = player.surface.find_entities_filtered({
     position: player.position,
     radius: task_manager.player_state.parameters_walk_to_entity.search_radius,
-    name: task_manager.player_state.parameters_walk_to_entity.entity_name, // TODO: catch entity name not found error
+    name: task_manager.player_state.parameters_walk_to_entity.entity_name,
   })
 
   if (!entities.length) {
@@ -546,6 +553,13 @@ function state_mining(player: LuaPlayer) {
     return
   }
 
+  if (!prototypes.entity[task_manager.player_state.parameters_mine_entity.entity_name]) {
+    log(`[AUTORIO] [ERROR] Unknown entity name: ${task_manager.player_state.parameters_mine_entity.entity_name}, reverting to IDLE state`)
+    task_manager.reset_task_state()
+    task_manager.next_task()
+    return
+  }
+
   const entities = player.surface.find_entities_filtered({
     position: player.position,
     radius: 5, // but player can only mine entities within 2 tiles
@@ -593,9 +607,16 @@ function state_placing(player: LuaPlayer) {
     return [false, 'Cannot access player inventory']
   }
 
+  if (!prototypes.entity[task_manager.player_state.parameters_place_entity.entity_name]) {
+    log(`[AUTORIO] [ERROR] Unknown entity name: ${task_manager.player_state.parameters_place_entity.entity_name}, reverting to IDLE state`)
+    task_manager.reset_task_state()
+    task_manager.next_task()
+    return [false, 'Invalid entity name']
+  }
+
   const entity_prototype = prototypes.entity[task_manager.player_state.parameters_place_entity.entity_name]
   if (!entity_prototype || !entity_prototype.items_to_place_this) {
-    log('[AUTORIO] Invalid entity name, ending PLACING task')
+    log(`[AUTORIO] [ERROR] Entity ${task_manager.player_state.parameters_place_entity.entity_name} cannot be placed, ending PLACING task`)
     task_manager.reset_task_state()
     task_manager.next_task()
     return [false, 'Invalid entity name']
