@@ -12,7 +12,7 @@ setGlobalFormat(Format.Pretty)
 const logger = useLogg('main').useGlobalConfig()
 
 let lastLlmCallTime = 0
-const THROTTLE_MS = 2000
+const THROTTLE_MS = 500
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
