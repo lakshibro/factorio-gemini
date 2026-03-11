@@ -6,7 +6,12 @@ import { assistant, composeAgent, defineToolFunction, system, toolFunction, user
 import { createGoogleGenerativeAI } from '@xsai/providers'
 import { geminiConfig } from '../config'
 import { parseLLMMessage } from '../parser'
-import prompt from './prompt.md?raw'
+import { readFileSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const prompt = readFileSync(resolve(__dirname, 'prompt.md'), 'utf-8')
 import { tools } from './tools'
 
 const logger = createLogg('agent').useGlobalConfig()
