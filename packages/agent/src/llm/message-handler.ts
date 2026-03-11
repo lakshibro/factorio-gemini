@@ -23,11 +23,12 @@ export async function createMessageHandler() {
     toolFunctions.push(defineToolFunction(await toolFunction(tool.name, tool.description, tool.schema), tool.fn))
   }
 
+  const geminiProvider = createGoogleGenerativeAI({
+    apiKey: geminiConfig.apiKey,
+  })
+
   const agent = composeAgent({
-    provider: createGoogleGenerativeAI({
-      apiKey: geminiConfig.apiKey,
-      baseURL: 'https://generativelanguage.googleapis.com/v1beta/',
-    }) as any,
+    provider: geminiProvider.chat('gemini-2.5-flash'),
     tools: toolFunctions,
   })
 
