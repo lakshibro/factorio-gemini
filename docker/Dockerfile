@@ -1,8 +1,6 @@
 FROM --platform=linux/amd64 ubuntu:22.04
 
-ARG factorio_version
-ARG factorio_login
-ARG factorio_pwd
+ARG factorio_version=1.1.109
 
 WORKDIR /workspace
 
@@ -15,17 +13,14 @@ RUN apt-get install -y \
     xz-utils \
     ca-certificates
 
-RUN wget https://raw.githubusercontent.com/moviuro/factorio-dl/refs/heads/master/factorio-dl
-RUN chmod +x factorio-dl
-
-# avoid password prompt
-COPY factorio_dl_wrapper.sh /workspace/factorio_dl_wrapper.sh
-RUN chmod +x factorio_dl_wrapper.sh
-
-RUN ./factorio_dl_wrapper.sh
-RUN ls
-
+# Download free headless server directly (no login required)
+RUN wget https://factorio.com/get-download/${factorio_version}/headless/linux64 -O factorio_linux_${factorio_version}.tar.xz
 RUN tar -xvf factorio_linux_${factorio_version}.tar.xz
+
+# Prepare server settings for cracked clients
+RUN cp /workspace/factorio/data/server-settings.example.json /workspace/factorio/data/server-settings.json && \
+    sed -i 's/"require_user_verification": true/"require_user_verification": false/' /workspace/factorio/data/server-settings.json
+
 
 # node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash -

@@ -55,7 +55,7 @@ async function main() {
     '--rcon-port',
     factorioConfig.rconPort.toString(),
     '--server-settings',
-    '/root/factorio/data/server-settings.json',
+    '/workspace/factorio/data/server-settings.json',
   ]
 
   if (arch() === 'arm64') {
