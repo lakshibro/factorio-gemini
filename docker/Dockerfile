@@ -41,8 +41,7 @@ COPY . /workspace
 RUN pnpm install
 RUN pnpm build
 
-COPY start-factorio.sh /workspace/start-factorio.sh
-RUN chmod +x start-factorio.sh
+RUN chmod +x /workspace/docker/start-factorio.sh
 
 # clean
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -51,4 +50,4 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 ENV DISPLAY=:1
 EXPOSE 5900 5901
 
-ENTRYPOINT ["./start-factorio.sh"]
+ENTRYPOINT ["/workspace/docker/start-factorio.sh"]
