@@ -14,6 +14,7 @@ export enum TaskStates {
   MOVING_ITEMS = 'moving_items',
   ATTACKING = 'attacking',
   WAITING = 'waiting',
+  BUILDING_BLUEPRINT = 'building_blueprint',
 }
 
 export interface PlayerParametersWalkToEntity {
@@ -76,6 +77,12 @@ export interface PlayerParametersWaiting {
   remaining_ticks: number
 }
 
+export interface PlayerParametersBuildingBlueprint {
+  type: TaskStates.BUILDING_BLUEPRINT
+  blueprint_string: string
+  position: MapPositionStruct
+}
+
 export type PlayerParameters
   = | PlayerParametersWalkToEntity
     | PlayerParametersWalkingDirect
@@ -86,6 +93,7 @@ export type PlayerParameters
     | PlayerParametersAttackNearestEnemy
     | PlayerParametersResearchTechnology
     | PlayerParametersWaiting
+    | PlayerParametersBuildingBlueprint
 
 export interface PlayerState {
   task_state: TaskStates
@@ -98,4 +106,5 @@ export interface PlayerState {
   parameters_attack_nearest_enemy?: PlayerParametersAttackNearestEnemy
   parameters_research_technology?: PlayerParametersResearchTechnology
   parameters_waiting?: PlayerParametersWaiting
+  parameters_building_blueprint?: PlayerParametersBuildingBlueprint
 }

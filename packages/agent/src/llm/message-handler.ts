@@ -16,11 +16,11 @@ import { tools } from './tools'
 
 const logger = createLogg('agent').useGlobalConfig()
 
-export async function createMessageHandler() {
+export async function createMessageHandler(sendCommand: (command: string) => Promise<any>) {
   const toolFunctions: DefinedTool<any, any>[] = []
 
   for (const tool of tools) {
-    toolFunctions.push(defineToolFunction(await toolFunction(tool.name, tool.description, tool.schema), tool.fn))
+    toolFunctions.push(defineToolFunction(await toolFunction(tool.name, tool.description, tool.schema), (args) => tool.fn(args, sendCommand)))
   }
 
   const llmProvider = createOpenAI({

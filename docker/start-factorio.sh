@@ -9,9 +9,16 @@ done
 x11vnc -display $DISPLAY -nopw -forever &
 websockify --web=/usr/share/novnc/ 5901 localhost:5900 &
 
-./factorio/bin/x64/factorio \
-  --disable-audio \
-  --force-graphics-preset very-low \
-  --window-size 640x640 \
-  --graphics-quality low \
-  --video-memory-usage low
+# Start wrapper (which starts factorio)
+cd /workspace/packages/factorio-wrapper
+pnpm start &
+
+# Wait for wrapper to start (WebSocket)
+sleep 10
+
+# Start agent
+cd /workspace/packages/agent
+pnpm start
+
+# Keep script running
+wait

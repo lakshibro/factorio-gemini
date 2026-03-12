@@ -25,9 +25,17 @@ create_tools_remote_interface()
 
 let setup_complete = false
 
-const task_manager = new_task_manager()
+const task_managers: { [player_index: number]: ReturnType<typeof new_task_manager> } = {}
+const path_request_to_player: { [request_id: number]: number } = {}
 
-function log_player_info(player_id: number) {
+function get_task_manager(player_index: number) {
+  if (!task_managers[player_index]) {
+    task_managers[player_index] = new_task_manager()
+  }
+  return task_managers[player_index]
+}
+
+function log_player_info(player_id: number, radius: number = 20) {
   // compact for lua array index
   const player = game.connected_players[player_id - 1]
   const log_data: {
@@ -127,9 +135,9 @@ function log_player_info(player_id: number) {
 }
 
 remote.add_interface('autorio_operations', {
-  walk_to_entity: (entity_name: string, search_radius: number) => {
-    log(`[AUTORIO] New walk_to_entity task: ${entity_name}, radius: ${search_radius}`)
-    task_manager.add_task({
+  walk_to_entity: (entity_name: string, search_radius: number, player_index: number = 1) => {
+    log(`[AUTORIO] New walk_to_entity task for player ${player_index}: ${entity_name}, radius: ${search_radius}`)
+    get_task_manager(player_index).add_task({
       type: TaskStates.WALKING_TO_ENTITY,
       entity_name,
       search_radius,
@@ -143,28 +151,28 @@ remote.add_interface('autorio_operations', {
     return true
   },
 
-  mine_entity: (entity_name: string, count: number = 1) => {
-    task_manager.add_task({
+  mine_entity: (entity_name: string, count: number = 1, player_index: number = 1) => {
+    get_task_manager(player_index).add_task({
       type: TaskStates.MINING,
       entity_name,
       count,
     })
 
-    log(`[AUTORIO] New mine_entity task: ${entity_name} x${count}`)
+    log(`[AUTORIO] New mine_entity task for player ${player_index}: ${entity_name} x${count}`)
     return true
   },
-  place_entity: (entity_name: string) => {
-    task_manager.add_task({
+  place_entity: (entity_name: string, player_index: number = 1) => {
+    get_task_manager(player_index).add_task({
       type: TaskStates.PLACING,
       entity_name,
       position: undefined,
     })
 
-    log(`[AUTORIO] New place_entity task: ${entity_name}`)
+    log(`[AUTORIO] New place_entity task for player ${player_index}: ${entity_name}`)
     return true
   },
-  move_items: (item_name: string, entity_name: string, max_count: number, to_entity: boolean): [boolean, string] => {
-    task_manager.add_task({
+  move_items: (item_name: string, entity_name: string, max_count: number, to_entity: boolean, player_index: number = 1): [boolean, string] => {
+    get_task_manager(player_index).add_task({
       type: TaskStates.MOVING_ITEMS,
       item_name,
       entity_name,
@@ -173,32 +181,35 @@ remote.add_interface('autorio_operations', {
     })
 
     if (to_entity) {
-      log(`[AUTORIO] New move_items task for ${item_name} from player's inventory to ${entity_name}`)
+      log(`[AUTORIO] New move_items task for player ${player_index} for ${item_name} from player's inventory to ${entity_name}`)
     }
     else {
-      log(`[AUTORIO] New move_items task for ${item_name} from ${entity_name} to player's inventory`)
+      log(`[AUTORIO] New move_items task for player ${player_index} for ${item_name} from ${entity_name} to player's inventory`)
     }
 
     return [true, 'Task started']
   },
-  wait: (ticks: number): [boolean, string] => {
-    task_manager.add_task({
+  wait: (ticks: number, player_index: number = 1): [boolean, string] => {
+    get_task_manager(player_index).add_task({
       type: TaskStates.WAITING,
       remaining_ticks: ticks,
     })
 
-    log(`[AUTORIO] New wait task for ${ticks} ticks`)
+    log(`[AUTORIO] New wait task for player ${player_index} for ${ticks} ticks`)
 
     return [true, 'Task started']
   },
-  craft_item: (item_name: string, count: number = 1): [boolean, string] => {
-    const player = game.connected_players[0]
+  craft_item: (item_name: string, count: number = 1, player_index: number = 1): [boolean, string] => {
+    const player = game.connected_players[player_index - 1]
+    if (!player) {
+      return [false, 'Player not found']
+    }
     if (!player.force.recipes[item_name]) {
-      log('[AUTORIO] Cannot start craft_item task: Recipe not available')
+      log(`[AUTORIO] Cannot start craft_item task for player ${player_index}: Recipe not available`)
       return [false, 'Recipe not available']
     }
     if (!player.force.recipes[item_name].enabled) {
-      log('[AUTORIO] Cannot start craft_item task: Recipe not unlocked')
+      log(`[AUTORIO] Cannot start craft_item task for player ${player_index}: Recipe not unlocked`)
       return [false, 'Recipe not unlocked']
     }
 
@@ -206,60 +217,72 @@ remote.add_interface('autorio_operations', {
       return [false, 'Not enough ingredients']
     }
 
-    task_manager.add_task({
+    get_task_manager(player_index).add_task({
       type: TaskStates.CRAFTING,
       item_name,
       count,
       crafted: 0,
     })
 
-    log(`[AUTORIO] New craft_item task: ${item_name} x${count}`)
+    log(`[AUTORIO] New craft_item task for player ${player_index}: ${item_name} x${count}`)
     return [true, 'Task started']
   },
-  attack_nearest_enemy: (search_radius: number = 50): [boolean, string] => {
-    task_manager.add_task({
+  attack_nearest_enemy: (search_radius: number = 50, player_index: number = 1): [boolean, string] => {
+    get_task_manager(player_index).add_task({
       type: TaskStates.ATTACKING,
       search_radius,
       target: null,
     })
 
-    log(`[AUTORIO] New attack nearest enemy task, search radius: ${search_radius}`)
+    log(`[AUTORIO] New attack nearest enemy task for player ${player_index}, search radius: ${search_radius}`)
     return [true, 'Task started']
   },
-  research_technology: (technology_name: string): [boolean, string] => {
-    const player = game.connected_players[0]
+  research_technology: (technology_name: string, player_index: number = 1): [boolean, string] => {
+    const player = game.connected_players[player_index - 1]
+    if (!player) {
+      return [false, 'Player not found']
+    }
     const force = player.force
     const tech = force.technologies[technology_name]
 
     if (!tech) {
-      log('[AUTORIO] Cannot start research_technology task: Technology not found')
+      log(`[AUTORIO] Cannot start research_technology task for player ${player_index}: Technology not found`)
       return [false, 'Technology not found']
     }
 
     if (tech.researched) {
-      log('[AUTORIO] Cannot start research_technology task: Technology already researched')
+      log(`[AUTORIO] Cannot start research_technology task for player ${player_index}: Technology already researched`)
       return [false, 'Technology already researched']
     }
 
     if (!tech.enabled) {
-      log('[AUTORIO] Cannot start research_technology task: Technology not available for research')
+      log(`[AUTORIO] Cannot start research_technology task for player ${player_index}: Technology not available for research`)
       return [false, 'Technology not available for research']
     }
 
     const research_added = force.add_research(tech)
     if (research_added) {
-      log(`[AUTORIO] New research_technology task: ${technology_name}`)
+      log(`[AUTORIO] New research_technology task for player ${player_index}: ${technology_name}`)
       return [true, 'Research started']
     }
-    log('[AUTORIO] Could not start new research.')
+    log(`[AUTORIO] Could not start new research for player ${player_index}.`)
     return [true, 'Cannot start new research.']
   },
-  cancel_all_tasks: () => {
-    task_manager.cancel_all_tasks()
+  cancel_all_tasks: (player_index: number = 1) => {
+    get_task_manager(player_index).cancel_all_tasks()
     return true
   },
-  log_player_info: (player_id: number) => {
-    log_player_info(player_id)
+  build_blueprint: (blueprint_string: string, position: MapPositionStruct, player_index: number = 1) => {
+    get_task_manager(player_index).add_task({
+      type: TaskStates.BUILDING_BLUEPRINT,
+      blueprint_string,
+      position,
+    })
+    log(`[AUTORIO] New building_blueprint task for player ${player_index}`)
+    return true
+  },
+  log_player_info: (player_id: number, radius: number = 20) => {
+    log_player_info(player_id, radius)
     return true
   },
 })
@@ -322,18 +345,27 @@ function start_mining(player: LuaPlayer, entity_position: MapPositionStruct) {
 script.on_event(defines.events.on_selected_entity_changed, (unused_event: OnSelectedEntityChangedEvent) => {})
 
 script.on_event(defines.events.on_script_path_request_finished, (event: OnScriptPathRequestFinishedEvent) => {
+  const player_index = path_request_to_player[event.id]
+  if (!player_index) return
+  // delete path_request_to_player[event.id]
+  path_request_to_player[event.id] = 0 // use 0 as a 'null' index since player indices start at 1
+  
+  const player = game.players[player_index]
+  if (!player) return
+  const task_manager = get_task_manager(player_index)
+
   if (task_manager.player_state.task_state !== TaskStates.WALKING_TO_ENTITY) {
-    log('[AUTORIO] Not walking to entity, ignoring path request')
+    log(`[AUTORIO] Player ${player_index} not walking to entity, ignoring path request`)
     return
   }
 
   if (!task_manager.player_state.parameters_walk_to_entity) {
-    log('[AUTORIO] No parameters found when receiving path request')
+    log(`[AUTORIO] No parameters found for player ${player_index} when receiving path request`)
     return
   }
 
   if (!event.path) {
-    log('[AUTORIO] Path calculation failed, switching to direct walking')
+    log(`[AUTORIO] Path calculation failed for player ${player_index}, switching to direct walking`)
     task_manager.player_state.task_state = TaskStates.WALKING_DIRECT
     task_manager.player_state.parameters_walking_direct = {
       type: TaskStates.WALKING_DIRECT,
@@ -347,10 +379,11 @@ script.on_event(defines.events.on_script_path_request_finished, (event: OnScript
   task_manager.player_state.parameters_walk_to_entity.path_drawn = false
   task_manager.player_state.parameters_walk_to_entity.path_index = 1
   task_manager.player_state.parameters_walk_to_entity.calculating_path = false
-  log(`[AUTORIO] Path calculation completed. Path length: ${event.path}`)
+  log(`[AUTORIO] Path calculation completed for player ${player_index}. Path length: ${event.path.length}`)
 })
 
-script.on_event(defines.events.on_player_mined_entity, (unused_event: OnPlayerMinedEntityEvent) => {
+script.on_event(defines.events.on_player_mined_entity, (event: OnPlayerMinedEntityEvent) => {
+  const task_manager = get_task_manager(event.player_index)
   if (task_manager.player_state.task_state !== TaskStates.MINING) {
     return
   }
@@ -372,15 +405,60 @@ script.on_event(defines.events.on_player_mined_entity, (unused_event: OnPlayerMi
 
 function setup() {
   const surface = game.surfaces[1]
-  const enemies = surface.find_entities_filtered({ force: 'enemy' })
-  log(`[AUTORIO] Removing ${enemies.length} enemies`)
-  for (const enemy of enemies) {
-    enemy.destroy()
-  }
+  // const enemies = surface.find_entities_filtered({ force: 'enemy' })
+  // log(`[AUTORIO] Removing ${enemies.length} enemies`)
+  // for (const enemy of enemies) {
+  //   enemy.destroy()
+  // }
 
   setup_complete = true
   log('[AUTORIO] Setup complete')
 }
+
+function state_building_blueprint(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
+  const params = task_manager.player_state.parameters_building_blueprint
+  if (!params) return
+
+  // Import blueprint
+  const [inventory, unused_index] = player.get_main_inventory()?.find_item_stack('blueprint') ?? []
+  if (!inventory) {
+    log('[AUTORIO] [ERROR] No blueprint item found in inventory')
+    task_manager.reset_task_state()
+    task_manager.next_task()
+    return
+  }
+
+  inventory.import_stack(params.blueprint_string)
+  
+  // Use build_from_cursor
+  player.cursor_stack?.set_stack(inventory)
+  try {
+    // In Factorio, the method is build_from_cursor
+    player.build_from_cursor({
+      position: params.position,
+      direction: defines.direction.north,
+    })
+  } catch (e) {
+    log(`[AUTORIO] build_from_cursor failed: ${e}`)
+  }
+
+  log(`[AUTORIO] Blueprint building task started at ${serpent.line(params.position)}`)
+  task_manager.reset_task_state()
+  task_manager.next_task()
+}
+
+commands.add_command('spawn_bot', 'Spawn a bot character', (event) => {
+  const surface = game.surfaces[1]
+  const player_index = event.player_index || 1
+  const player = game.players[player_index]
+  
+  // If player has no character, give them one
+  if (!player.character) {
+    player.create_character()
+    log(`[AUTORIO] Created character for player ${player.name}`)
+  }
+})
 
 function draw_path(player: LuaPlayer, path: PathfinderWaypoint[]) {
   for (let i = 0; i < path.length - 1; i++) {
@@ -420,13 +498,14 @@ function follow_path(player: LuaPlayer, path: PathfinderWaypoint[]) {
 }
 
 function state_walking_to_entity(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   if (!task_manager.player_state.parameters_walk_to_entity) {
-    log('[AUTORIO] No parameters found when walking to entity')
+    log(`[AUTORIO] No parameters found when walking to entity for player ${player.index}`)
     return
   }
 
   if (task_manager.player_state.parameters_walk_to_entity.calculating_path) {
-    log('[AUTORIO] Path calculation in progress, skipping')
+    log(`[AUTORIO] Path calculation in progress for player ${player.index}, skipping`)
     return
   }
 
@@ -517,7 +596,7 @@ function state_walking_to_entity(player: LuaPlayer) {
       consider_tile_transitions: true,
     }
 
-    player.surface.request_path({
+    const id = player.surface.request_path({
       bounding_box: bbox,
       collision_mask,
       radius: 2,
@@ -532,15 +611,17 @@ function state_walking_to_entity(player: LuaPlayer) {
         allow_paths_through_own_entities: false,
       },
     })
+    path_request_to_player[id] = player.index
     task_manager.player_state.parameters_walk_to_entity.calculating_path = true
     task_manager.player_state.parameters_walk_to_entity.target_position = nearest_entity.position
-    log(`[AUTORIO] Requested path calculation to ${serpent.line(nearest_entity.position)}`)
+    log(`[AUTORIO] Requested path calculation (id: ${id}) for player ${player.index} to ${serpent.line(nearest_entity.position)}`)
   }
 }
 
 function state_mining(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   if (!task_manager.player_state.parameters_mine_entity) {
-    log('[AUTORIO] No parameters found when mining')
+    log(`[AUTORIO] No parameters found when mining for player ${player.index}`)
     return
   }
 
@@ -585,6 +666,7 @@ function state_mining(player: LuaPlayer) {
 }
 
 function state_placing(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   if (!player) {
     log('[AUTORIO] Invalid player, ending PLACING task')
     task_manager.reset_task_state()
@@ -593,7 +675,7 @@ function state_placing(player: LuaPlayer) {
   }
 
   if (!task_manager.player_state.parameters_place_entity) {
-    log('[AUTORIO] No parameters found when placing')
+    log(`[AUTORIO] No parameters found when placing for player ${player.index}`)
     return
   }
 
@@ -671,10 +753,11 @@ function state_placing(player: LuaPlayer) {
 
 // TODO: Move items between specified entity and player inventory, give the entity name and position as parameters
 function state_moving_items(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   const parameters = task_manager.player_state.parameters_move_items
 
   if (!parameters) {
-    log('[AUTORIO] No parameters found when moving items')
+    log(`[AUTORIO] No parameters found when moving items for player ${player.index}`)
     return
   }
 
@@ -832,8 +915,9 @@ function check_can_craft(player: LuaPlayer, item_name: string, count: number) {
 }
 
 function state_researching(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   if (!task_manager.player_state.parameters_research_technology) {
-    log('[AUTORIO] No parameters found when researching')
+    log(`[AUTORIO] No parameters found when researching for player ${player.index}`)
     return
   }
 
@@ -853,8 +937,9 @@ function state_researching(player: LuaPlayer) {
 }
 
 function state_walking_direct(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   if (!task_manager.player_state.parameters_walking_direct) {
-    log('[AUTORIO] No parameters found when walking directly')
+    log(`[AUTORIO] No parameters found when walking directly for player ${player.index}`)
     return
   }
 
@@ -880,9 +965,10 @@ function state_walking_direct(player: LuaPlayer) {
   }
 }
 
-function state_waiting() {
+function state_waiting(player: LuaPlayer) {
+  const task_manager = get_task_manager(player.index)
   if (!task_manager.player_state.parameters_waiting) {
-    log('[AUTORIO] No parameters found when waiting')
+    log(`[AUTORIO] No parameters found when waiting for player ${player.index}`)
     return
   }
 
@@ -896,46 +982,45 @@ function state_waiting() {
   task_manager.player_state.parameters_waiting.remaining_ticks -= 1
 }
 
-let no_player_found = false
-
 script.on_event(defines.events.on_tick, (unused_event) => {
   if (!setup_complete) {
     setup()
   }
 
-  const player = game.connected_players[0]
-  if (player === undefined || player.character === undefined) {
-    if (!no_player_found) {
-      log('[AUTORIO] No valid player found')
-      no_player_found = true
+  for (const player of game.connected_players) {
+    if (player.character === undefined) {
+      continue
     }
-    return
-  }
 
-  if (task_manager.player_state.task_state === TaskStates.IDLE) {
-    return
-  }
+    const task_manager = get_task_manager(player.index)
+    if (task_manager.player_state.task_state === TaskStates.IDLE) {
+      continue
+    }
 
-  if (task_manager.player_state.task_state === TaskStates.WALKING_TO_ENTITY) {
-    state_walking_to_entity(player)
-  }
-  else if (task_manager.player_state.task_state === TaskStates.MINING) {
-    state_mining(player)
-  }
-  else if (task_manager.player_state.task_state === TaskStates.PLACING) {
-    state_placing(player)
-  }
-  else if (task_manager.player_state.task_state === TaskStates.MOVING_ITEMS) {
-    state_moving_items(player)
-  }
-  else if (task_manager.player_state.task_state === TaskStates.RESEARCHING) {
-    state_researching(player)
-  }
-  else if (task_manager.player_state.task_state === TaskStates.WALKING_DIRECT) {
-    state_walking_direct(player)
-  }
-  else if (task_manager.player_state.task_state === TaskStates.WAITING) {
-    state_waiting()
+    if (task_manager.player_state.task_state === TaskStates.WALKING_TO_ENTITY) {
+      state_walking_to_entity(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.MINING) {
+      state_mining(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.PLACING) {
+      state_placing(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.MOVING_ITEMS) {
+      state_moving_items(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.RESEARCHING) {
+      state_researching(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.WALKING_DIRECT) {
+      state_walking_direct(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.WAITING) {
+      state_waiting(player)
+    }
+    else if (task_manager.player_state.task_state === TaskStates.BUILDING_BLUEPRINT) {
+      state_building_blueprint(player)
+    }
   }
 })
 
@@ -943,8 +1028,9 @@ script.on_event(defines.events.on_player_crafted_item, (event: OnPlayerCraftedIt
   // compact for lua array index
   log(`[AUTORIO] Player ${game.connected_players[event.player_index - 1].name} crafted item: ${event.item_stack.name}`) // TODO: determine player index
 
+  const task_manager = get_task_manager(event.player_index)
   if (!task_manager.player_state.parameters_craft_item) {
-    log('[AUTORIO] No parameters found when item crafted')
+    log(`[AUTORIO] No parameters found for player ${event.player_index} when item crafted`)
     return
   }
 

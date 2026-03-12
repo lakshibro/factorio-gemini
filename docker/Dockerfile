@@ -27,7 +27,10 @@ RUN ls
 
 RUN tar -xvf factorio_linux_${factorio_version}.tar.xz
 
-ENV DEBIAN_FRONTEND=noninteractive
+# node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g pnpm
 
 # factorio dependencies
 RUN apt-get install -y \
@@ -35,6 +38,11 @@ RUN apt-get install -y \
     xvfb x11-apps mesa-utils \
     # noVNC
     x11vnc novnc websockify
+
+# copy workspace
+COPY . /workspace
+RUN pnpm install
+RUN pnpm build
 
 COPY start-factorio.sh /workspace/start-factorio.sh
 RUN chmod +x start-factorio.sh

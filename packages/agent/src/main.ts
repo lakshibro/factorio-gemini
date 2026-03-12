@@ -70,7 +70,21 @@ async function main() {
 
   const gameLogger = useLogg('game').useGlobalConfig()
 
-  const messageHandler = await createMessageHandler()
+  const sendCommand = async (command: string) => {
+    logger.withFields({ command }).debug('Tool sending command')
+    ws.socket.send(JSON.stringify({
+      type: 'command',
+      command: `/silent-command ${command}`,
+    }))
+    return 'Command sent to game'
+  }
+
+  const messageHandler = await createMessageHandler(sendCommand)
+
+  // Initial setup: spawn bot if needed
+  logger.log('Agent connected, ensuring bot character exists...')
+  await sendCommand('remote.call("autorio_operations", "spawn_bot", 1)') // Assume index 1 for now or detect
+  await sendCommand('remote.call("autorio_operations", "log_player_info", 1)')
 
   for await (const buffer of ws.source) {
     const line = Buffer.from(buffer).toString('utf-8')

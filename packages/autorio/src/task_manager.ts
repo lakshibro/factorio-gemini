@@ -86,6 +86,9 @@ export function new_task_manager() {
       case TaskStates.WAITING:
         player_state.parameters_waiting = task
         break
+      case TaskStates.BUILDING_BLUEPRINT:
+        player_state.parameters_building_blueprint = task
+        break
     }
   }
 
