@@ -27,5 +27,5 @@ export function initEnv() {
   wsServerConfig.host = env.WS_SERVER_HOST || '0.0.0.0'
   wsServerConfig.port = Number.parseInt(env.WS_SERVER_PORT || '8080')
 
-  logger.withFields({ factorioConfig }).log('Environment variables initialized')
+  logger.withFields({ factorioConfig, wsServerConfig }).log('Environment variables initialized')
 }

@@ -18,6 +18,8 @@ async function main() {
   const wsServer = new WebSocketServer({
     host: wsServerConfig.host,
     port: wsServerConfig.port,
+  }, () => {
+    webSocketLogger.withFields({ host: wsServerConfig.host, port: wsServerConfig.port }).log('WebSocket server listening')
   })
 
   wsServer.on('connection', (socket) => {
