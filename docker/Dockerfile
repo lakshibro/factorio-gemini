@@ -16,11 +16,11 @@ RUN apt-get install -y \
     xz-utils \
     ca-certificates
 
-# Download free headless server directly (no login required)
+# download factorio
+ARG factorio_version=2.0.32
 RUN wget https://factorio.com/get-download/${factorio_version}/headless/linux64 -O factorio_linux_${factorio_version}.tar.xz
 RUN tar -xvf factorio_linux_${factorio_version}.tar.xz
-
-# Prepare server settings for cracked clients
+RUN mkdir -p /workspace/factorio/mods && ln -s /workspace/packages/autorio/dist /workspace/factorio/mods/autorio
 RUN cp /workspace/factorio/data/server-settings.example.json /workspace/factorio/data/server-settings.json && \
     sed -i 's/"require_user_verification": true/"require_user_verification": false/' /workspace/factorio/data/server-settings.json && \
     sed -i 's/"public": true/"public": false/' /workspace/factorio/data/server-settings.json
