@@ -67,7 +67,7 @@ export const tools: ToolFunction[] = [
       player_index: z.number().default(1),
     }),
     fn: async ({ player_index }, sendCommand) => {
-      return await sendCommand(`game.player.create_character()`) 
+      return await sendCommand(`remote.call("autorio_operations", "spawn_bot", ${player_index})`) 
     },
   }
 ]

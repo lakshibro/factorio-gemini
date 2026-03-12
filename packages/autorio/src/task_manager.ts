@@ -63,7 +63,7 @@ export function new_task_manager() {
         player_state.parameters_move_items = task
         break
       case TaskStates.CRAFTING:{
-        const player = game.connected_players[0]
+        const player = game.players[1]
         if (!player) {
           log('[AUTORIO] No player found')
           return

@@ -51,6 +51,7 @@ function log_player_info(player_id: number, radius: number = 20) {
     map_info: {
       surface_name: string
       daytime: number
+      min_brightness?: number
       wind_speed: number
       wind_orientation: number
     }
@@ -117,7 +118,7 @@ function log_player_info(player_id: number, radius: number = 20) {
     }
   }
 
-  for (let i = 1; i < player.crafting_queue_size; i++) {
+  for (let i = 1; i <= player.crafting_queue_size; i++) {
     const item = player.crafting_queue?.[i]
     if (item) {
       log_data.crafting_queue.push({ name: item.recipe, count: item.count })
@@ -203,7 +204,7 @@ remote.add_interface('autorio_operations', {
     return [true, 'Task started']
   },
   craft_item: (item_name: string, count: number = 1, player_index: number = 1): [boolean, string] => {
-    const player = game.connected_players[player_index - 1]
+    const player = game.players[player_index]
     if (!player) {
       return [false, 'Player not found']
     }
@@ -241,7 +242,7 @@ remote.add_interface('autorio_operations', {
     return [true, 'Task started']
   },
   research_technology: (technology_name: string, player_index: number = 1): [boolean, string] => {
-    const player = game.connected_players[player_index - 1]
+    const player = game.players[player_index]
     if (!player) {
       return [false, 'Player not found']
     }
@@ -452,10 +453,15 @@ function state_building_blueprint(player: LuaPlayer) {
 }
 
 commands.add_command('spawn_bot', 'Spawn a bot character', (event) => {
-  const surface = game.surfaces[1]
   const player_index = event.player_index || 1
-  const player = game.players[player_index]
+  let player = game.players[player_index]
   
+  // Handless server initialization: create bot player if it doesn't exist
+  if (!player) {
+    log(`[AUTORIO] Player ${player_index} doesn't exist, creating "Airi"`)
+    player = (game as any).create_player('Airi')
+  }
+
   // If player has no character, give them one
   if (!player.character) {
     player.create_character()

@@ -7,7 +7,7 @@ export function create_tools_remote_interface() {
       return true
     },
     get_recipe: (item_name: string, player_id: number) => {
-      const player = game.connected_players[player_id - 1]
+      const player = game.players[player_id]
 
       const recipe = player.force.recipes[item_name]
       if (!recipe) {
