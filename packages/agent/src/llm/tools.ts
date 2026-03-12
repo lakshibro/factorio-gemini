@@ -20,18 +20,19 @@ export const tools: ToolFunction[] = [
     schema: z.object({
       player_index: z.number().default(1),
     }),
-    fn: async ({ player_index }, sendCommand) => {
+    fn: async ({ player_index = 1 }, sendCommand) => {
       return await sendCommand(`remote.call("autorio_tools", "get_inventory_items", ${player_index})`)
     },
   },
   {
-    name: 'get_recipes',
-    description: 'Get the list of available recipes for the player\'s force',
+    name: 'get_recipe_ingredients',
+    description: 'Get the ingredients required for a specific recipe',
     schema: z.object({
+      item_name: z.string(),
       player_index: z.number().default(1),
     }),
-    fn: async ({ player_index }, sendCommand) => {
-      return await sendCommand(`remote.call("autorio_tools", "get_recipe", "iron-plate", ${player_index})`) // Mod should be updated to return all or specific tech
+    fn: async ({ item_name, player_index = 1 }, sendCommand) => {
+      return await sendCommand(`remote.call("autorio_tools", "get_recipe", "${item_name}", ${player_index})`)
     },
   },
   {
@@ -41,7 +42,7 @@ export const tools: ToolFunction[] = [
       player_index: z.number().default(1),
       radius: z.number().default(20),
     }),
-    fn: async ({ player_index, radius }, sendCommand) => {
+    fn: async ({ player_index = 1, radius = 20 }, sendCommand) => {
       return await sendCommand(`remote.call("autorio_operations", "log_player_info", ${player_index}, ${radius})`)
     },
   },
@@ -56,7 +57,7 @@ export const tools: ToolFunction[] = [
       }),
       player_index: z.number().default(1),
     }),
-    fn: async ({ blueprint_string, position, player_index }, sendCommand) => {
+    fn: async ({ blueprint_string, position, player_index = 1 }, sendCommand) => {
       return await sendCommand(`remote.call("autorio_operations", "build_blueprint", "${blueprint_string}", {x=${position.x}, y=${position.y}}, ${player_index})`)
     },
   },
@@ -66,7 +67,7 @@ export const tools: ToolFunction[] = [
     schema: z.object({
       player_index: z.number().default(1),
     }),
-    fn: async ({ player_index }, sendCommand) => {
+    fn: async ({ player_index = 1 }, sendCommand) => {
       return await sendCommand(`remote.call("autorio_operations", "spawn_bot", ${player_index})`) 
     },
   }
