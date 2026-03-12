@@ -38,10 +38,19 @@ RUN apt-get install -y \
     # noVNC
     x11vnc novnc websockify
 
-# copy workspace
-COPY . /workspace
+# optimize cache for dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/agent/package.json ./packages/agent/
+COPY packages/factorio-wrapper/package.json ./packages/factorio-wrapper/
+COPY packages/autorio/package.json ./packages/autorio/
 RUN pnpm install
-RUN pnpm build
+
+# copy remaining workspace
+COPY . /workspace
+
+# generate default save and build
+RUN /workspace/factorio/bin/x64/factorio --create /workspace/factorio/saves/the-save-file.zip && \
+    pnpm build
 
 RUN chmod +x /workspace/docker/start-factorio.sh
 
