@@ -22,7 +22,8 @@ RUN tar -xvf factorio_linux_${factorio_version}.tar.xz
 
 # Prepare server settings for cracked clients
 RUN cp /workspace/factorio/data/server-settings.example.json /workspace/factorio/data/server-settings.json && \
-    sed -i 's/"require_user_verification": true/"require_user_verification": false/' /workspace/factorio/data/server-settings.json
+    sed -i 's/"require_user_verification": true/"require_user_verification": false/' /workspace/factorio/data/server-settings.json && \
+    sed -i 's/"public": true/"public": false/' /workspace/factorio/data/server-settings.json
 
 
 # node.js
