@@ -40,10 +40,7 @@ RUN apt-get install -y \
 
 # optimize cache for dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/agent/package.json ./packages/agent/
-COPY packages/factorio-wrapper/package.json ./packages/factorio-wrapper/
-COPY packages/autorio/package.json ./packages/autorio/
-COPY packages/tstl-plugin-reload-factorio-mod/package.json ./packages/tstl-plugin-reload-factorio-mod/
+COPY packages/*/package.json ./packages/
 RUN pnpm install
 
 # copy remaining workspace
