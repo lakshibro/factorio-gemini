@@ -1,7 +1,7 @@
 import { createLogg } from '@guiiai/logg'
 import { z } from 'zod'
 
-const logger = createLogg('tools').useGlobalConfig()
+// logger removed as unused
 
 export type CommandSender = (command: string) => Promise<any>
 
@@ -16,7 +16,7 @@ export interface ToolFunction {
 export const tools: ToolFunction[] = [
   {
     name: 'get_inventory',
-    description: 'Get the inventory of a player',
+    description: 'Get the inventory items for a player (via autorio_tools)',
     schema: z.object({
       player_index: z.number().default(1),
     }),
@@ -37,7 +37,7 @@ export const tools: ToolFunction[] = [
   },
   {
     name: 'get_nearby_entities',
-    description: 'Get a list of entities near the player',
+    description: 'Get a list of entities and map info near the player (via autorio_operations)',
     schema: z.object({
       player_index: z.number().default(1),
       radius: z.number().default(20),

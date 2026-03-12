@@ -286,9 +286,10 @@ remote.add_interface('autorio_operations', {
     return true
   },
   spawn_bot: (player_index: number = 1): [boolean, string] => {
-    let player = game.players[player_index]
+    const player = game.players[player_index]
     if (!player) {
-      player = (game as any).create_player('Airi')
+      log(`[AUTORIO] [ERROR] Player ${player_index} not found. A real player must connect to the server at least once to initialize the game state.`)
+      return [false, 'Player 1 not found. Please connect to the server once with a Factorio client to initialize the bot.']
     }
     if (!player.character) {
       player.create_character()

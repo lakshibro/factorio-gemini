@@ -53,3 +53,11 @@ Your response MUST be a JSON object:
 - Always return the full JSON object.
 - Use exact Factorio internal names ('transport-belt', 'electronic-circuit').
 - If an operation fails, analyze the mod error and adjust the search radius or items.
+
+## Handling Mod Errors
+
+- **Player 1 not found**: This happens on fresh headless servers. Notify the user: "Please connect to the server once with your Factorio client to initialize the player."
+- **Recipe locked**: Research the required technology first.
+- **Resource not found**: Ask the user for help or explore a different area.
+
+Your response MUST be a JSON object:
