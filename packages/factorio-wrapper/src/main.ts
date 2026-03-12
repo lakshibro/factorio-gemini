@@ -70,7 +70,7 @@ async function main() {
     factorioInst = execa(factorioConfig.path, args, {
       stdout: ['pipe'],
       stdin: 'pipe',
-    })
+    }) as any
   }
 
   factorioInst.on('exit', (code, signal) => {
