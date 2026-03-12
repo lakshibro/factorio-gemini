@@ -38,13 +38,9 @@ RUN apt-get install -y \
     # noVNC
     x11vnc novnc websockify
 
-# optimize cache for dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/*/package.json ./packages/
-RUN pnpm install
-
-# copy remaining workspace
+# copy workspace
 COPY . /workspace
+RUN pnpm install
 
 # generate default save and build
 RUN /workspace/factorio/bin/x64/factorio --create /workspace/factorio/saves/the-save-file.zip && \
