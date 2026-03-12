@@ -36,8 +36,11 @@ function get_task_manager(player_index: number) {
 }
 
 function log_player_info(player_id: number, radius: number = 20) {
-  // compact for lua array index
-  const player = game.connected_players[player_id - 1]
+  const player = game.players[player_id]
+  if (!player || !player.connected) {
+    log(`[AUTORIO] [ERROR] Player ${player_id} not found or not connected`)
+    return
+  }
   const log_data: {
     name: string
     position: MapPosition
