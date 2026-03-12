@@ -22,7 +22,7 @@ export function initEnv() {
   llmConfig.baseURL = env.LLM_BASE_URL || 'https://api.groq.com/openai/v1'
   llmConfig.model = env.LLM_MODEL || 'llama-3.3-70b-versatile'
 
-  wsClientConfig.wsHost = env.FACTORIO_WS_HOST || 'localhost'
+  wsClientConfig.wsHost = env.FACTORIO_WS_HOST || '127.0.0.1'
   wsClientConfig.wsPort = Number.parseInt(env.FACTORIO_WS_PORT || '8080')
 
   logger.withFields({ llmConfig }).log('Environment variables initialized')

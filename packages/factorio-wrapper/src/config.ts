@@ -24,7 +24,7 @@ export function initEnv() {
   factorioConfig.rconPassword = env.FACTORIO_RCON_PASSWORD || ''
   factorioConfig.rconPort = Number.parseInt(env.FACTORIO_RCON_PORT || '27015')
 
-  wsServerConfig.host = env.WS_SERVER_HOST || 'localhost'
+  wsServerConfig.host = env.WS_SERVER_HOST || '0.0.0.0'
   wsServerConfig.port = Number.parseInt(env.WS_SERVER_PORT || '8080')
 
   logger.withFields({ factorioConfig }).log('Environment variables initialized')
