@@ -3,6 +3,8 @@ FROM --platform=linux/amd64 ubuntu:22.04
 ARG factorio_version=1.1.109
 
 WORKDIR /workspace
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
 
 # factorio downloader dependencies
 RUN apt-get update
