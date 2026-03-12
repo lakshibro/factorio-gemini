@@ -1,0 +1,14 @@
+node_modules
+packages/*/node_modules
+packages/*/dist
+dist
+.git
+.github
+*.log
+.vscode
+.pnpm-store
+.npm
+build
+coverage
+.nyc_output
+.yarn

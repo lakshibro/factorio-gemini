@@ -1,4 +1,5 @@
-FROM --platform=linux/amd64 ubuntu:22.04
+ARG PLATFORM=linux/amd64
+FROM --platform=${PLATFORM} ubuntu:22.04
 
 ARG factorio_version=1.1.109
 
