@@ -37,7 +37,7 @@ function get_task_manager(player_index: number) {
 
 function log_player_info(player_id: number, radius: number = 20) {
   const player = game.players[player_id]
-  if (!player || !player.connected) {
+  if (!player || (!player.connected && player.name !== "Airi")) {
     log(`[AUTORIO] [ERROR] Player ${player_id} not found or not connected`)
     return
   }
@@ -284,6 +284,16 @@ remote.add_interface('autorio_operations', {
     })
     log(`[AUTORIO] New building_blueprint task for player ${player_index}`)
     return true
+  },
+  spawn_bot: (player_index: number = 1): [boolean, string] => {
+    let player = game.players[player_index]
+    if (!player) {
+      player = (game as any).create_player('Airi')
+    }
+    if (!player.character) {
+      player.create_character()
+    }
+    return [true, 'Bot spawned']
   },
   log_player_info: (player_id: number, radius: number = 20) => {
     log_player_info(player_id, radius)

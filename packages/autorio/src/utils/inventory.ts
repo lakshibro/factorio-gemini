@@ -7,6 +7,9 @@ export function get_inventory_items(player_id: number): InventoryItem[] {
   log(`[AUTORIO] Getting inventory items for player: ${player_id}`)
 
   const player = game.players[player_id]
+  if (!player) {
+    return []
+  }
 
   const main_inventory = player.get_main_inventory()
   if (!main_inventory) {
