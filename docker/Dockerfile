@@ -43,6 +43,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/agent/package.json ./packages/agent/
 COPY packages/factorio-wrapper/package.json ./packages/factorio-wrapper/
 COPY packages/autorio/package.json ./packages/autorio/
+COPY packages/tstl-plugin-reload-factorio-mod/package.json ./packages/tstl-plugin-reload-factorio-mod/
 RUN pnpm install
 
 # copy remaining workspace
